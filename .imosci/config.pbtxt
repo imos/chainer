@@ -1,0 +1,51 @@
+configs {
+  key: "chainer.py3"
+  value {
+    requirement {
+      cpu: 16
+      memory: 16
+      # gpu: 1
+      disk: 10
+      image: "imosci"
+    }
+    time_limit { seconds: 900 }
+    command:
+        "docker run --rm --volume=$(pwd):/chainer "
+        "--workdir=/chainer imosci/chainer:py3 "
+        "bash -c \""
+        "export "
+        "CHAINER_BUILD_CHAINERX=1 CHAINERX_BUILD_CUDA=1 MAKEFLAGS=-j32 "
+        "CHAINERX_NVCC_GENERATE_CODE=arch=compute_70,code=sm_70; "
+        "python3 -m pip -q install --user .[test] && "
+        "python3 ./.imosci/parallel-pytest.py "
+        "--pytest=\\\"python3 -m pytest -m 'not slow and not gpu and not cudnn'\\\" "
+        "--threads=16 --directory=tests/chainerx_tests\""
+  }
+}
+configs {
+  key: "chainer.py3.bak"
+  value {
+    requirement {
+      cpu: 48
+      memory: 48
+      gpu: 2
+      disk: 10
+      image: "imosci"
+    }
+    time_limit { seconds: 900 }
+    command:
+        "nvidia-docker run --rm --volume=$(pwd):/chainer "
+        "--workdir=/chainer imosci/chainer:py3 "
+        "bash -c \""
+        "export "
+        "CHAINER_BUILD_CHAINERX=1 CHAINERX_BUILD_CUDA=1 MAKEFLAGS=-j32 "
+        "CHAINERX_NVCC_GENERATE_CODE=arch=compute_70,code=sm_70; "
+        "python3 setup.py -q install --user && "
+        "python3 ./.imosci/parallel-pytest.py "
+        "--pytest=\\\"python3 -m pytest -m 'not slow'\\\" "
+        "--threads=16 --directory=tests/chainer_tests && "
+        "python3 ./.imosci/parallel-pytest.py "
+        "--pytest=\\\"python3 -m pytest -m 'not slow'\\\" "
+        "--threads=16 --directory=tests/chainerx_tests\""
+  }
+}
